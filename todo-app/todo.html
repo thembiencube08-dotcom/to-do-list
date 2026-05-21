@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To-Do Timer</title>
+  <style>
+    :root {
+      --color-text-primary: #1e293b;
+      --color-text-secondary: #64748b;
+      --color-background-primary: #f5f7fa;
+      --color-background-secondary: #e8edf3;
+      --color-border-tertiary: #d2dbe7;
+      --color-border-secondary: #c2cfdf;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--color-background-primary);
+      color: var(--color-text-primary);
+      padding: 24px 16px;
+    }
+
+    .app {
+      max-width: 520px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .stats-card {
+      flex: 1;
+      border-radius: 12px;
+      padding: 10px 14px;
+      background: var(--color-background-secondary);
+      border: none;
+    }
+
+    .stats-label {
+      margin: 0;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-text-secondary);
+    }
+
+    .stats-value {
+      margin: 4px 0 0;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .add-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .field,
+    .minutes-field,
+    .add-btn,
+    .circle-btn,
+    .delete-btn,
+    .timer-btn {
+      font: inherit;
+    }
+
+    .field,
+    .minutes-field {
+      border: 1px solid var(--color-border-secondary);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--color-text-primary);
+      background: #ffffff;
+      outline: none;
+    }
+
+    .field {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .minutes-field {
+      width: 80px;
+    }
+
+    .field:focus,
+    .minutes-field:focus {
+      border-color: var(--color-text-secondary);
+    }
+
+    .add-btn {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      background: #0f172a;
+      color: #ffffff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tasks {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task-card {
+      background: #ffffff;
+      border: 0.5px solid var(--color-border-tertiary);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .task-card.done {
+      opacity: 0.62;
+    }
+
+    .task-card.failed {
+      background: #fcebeb;
+      border-color: #f09595;
+    }
+
+    .task-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .task-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .circle-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1.5px solid var(--color-border-secondary);
+      background: #ffffff;
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .circle-btn.done {
+      background: #3b6d11;
+      border-color: #3b6d11;
+    }
+
+    .circle-btn.done::after {
+      content: "";
+      position: absolute;
+      width: 8px;
+      height: 4px;
+      border: 2px solid #ffffff;
+      border-top: 0;
+      border-right: 0;
+      transform: rotate(-45deg);
+      left: 5px;
+      top: 6px;
+    }
+
+    .task-name {
+      margin: 0;
+      font-size: 0.98rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-name.done {
+      text-decoration: line-through;
+    }
+
+    .badge {
+      border: 1px solid transparent;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      line-height: 1.3;
+      flex-shrink: 0;
+    }
+
+    .badge.done {
+      background: #eaf3de;
+      color: #3b6d11;
+      border-color: #97c459;
+    }
+
+    .badge.fail {
+      background: #fcebeb;
+      color: #a32d2d;
+      border-color: #f09595;
+    }
+
+    .delete-btn {
+      margin-left: auto;
+      border: none;
+      background: transparent;
+      color: var(--color-text-secondary);
+      font-size: 1.1rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 2px;
+    }
+
+    .timer {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .timer-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.86rem;
+    }
+
+    .timer-readout {
+      font-weight: 700;
+    }
+
+    .timer-track {
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.09);
+      overflow: hidden;
+    }
+
+    .timer-fill {
+      width: 100%;
+      height: 100%;
+      border-radius: 999px;
+      transition: width 1s linear;
+    }
+
+    .timer-btn {
+      border: 1px solid var(--color-border-secondary);
+      border-radius: 999px;
+      background: #ffffff;
+      padding: 3px 10px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      color: var(--color-text-primary);
+      flex-shrink: 0;
+    }
+
+    .empty {
+      margin: 16px 0 0;
+      text-align: center;
+      color: var(--color-text-secondary);
+      border: 1px dashed var(--color-border-secondary);
+      border-radius: 12px;
+      padding: 20px 14px;
+      background: #ffffff;
+    }
+
+    @media (max-width: 560px) {
+      .add-row {
+        flex-wrap: wrap;
+      }
+
+      .field {
+        flex-basis: calc(100% - 90px);
+      }
+
+      .add-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+  <script>
+    (function () {
+      var useState = React.useState;
+      var useEffect = React.useEffect;
+      var useMemo = React.useMemo;
+      var createElement = React.createElement;
+
+      function formatTime(totalSeconds) {
+        var safe = Math.max(0, totalSeconds);
+        var minutes = Math.floor(safe / 60);
+        var seconds = safe % 60;
+        return minutes + ":" + String(seconds).padStart(2, "0");
+      }
+
+      function Timer(props) {
+        var seconds = props.seconds;
+        var done = props.done;
+        var onFail = props.onFail;
+        var onRecover = props.onRecover;
+
+        var _a = useState(seconds), remaining = _a[0], setRemaining = _a[1];
+        var _b = useState(false), paused = _b[0], setPaused = _b[1];
+
+        useEffect(function () {
+          setRemaining(seconds);
+          setPaused(false);
+        }, [seconds]);
+
+        useEffect(function () {
+          if (done || paused || remaining <= 0) {
+            return;
+          }
+
+          var timerId = setInterval(function () {
+            setRemaining(function (prev) {
+              return prev > 0 ? prev - 1 : 0;
+            });
+          }, 1000);
+
+          return function () {
+            clearInterval(timerId);
+          };
+        }, [done, paused, remaining]);
+
+        useEffect(function () {
+          if (remaining <= 0 && !done) {
+            onFail();
+          } else {
+            onRecover();
+          }
+        }, [remaining, done, onFail, onRecover]);
+
+        var ratio = seconds > 0 ? remaining / seconds : 0;
+        var isFail = remaining <= 0 && !done;
+        var isLow = !isFail && ratio <= 0.3;
+        var tone = isFail ? "#E24B4A" : isLow ? "#EF9F27" : "#1D9E75";
+        var fillWidth = Math.max(0, Math.min(100, ratio * 100)) + "%";
+
+        return createElement(
+          "div",
+          { className: "timer" },
+          createElement(
+            "div",
+            { className: "timer-head" },
+            createElement(
+              "span",
+              { className: "timer-readout", style: { color: tone } },
+              isFail ? "FAIL" : formatTime(remaining)
+            ),
+            createElement(
+              "button",
+              {
+                type: "button",
+                className: "timer-btn",
+                onClick: function () {
+                  setPaused(function (prev) {
+                    return !prev;
+                  });
+                },
+                disabled: done || isFail
+              },
+              paused ? "start" : "pause"
+            )
+          ),
+          createElement(
+            "div",
+            { className: "timer-track" },
+            createElement("div", {
+              className: "timer-fill",
+              style: {
+                width: fillWidth,
+                backgroundColor: tone
+              }
+            })
+          )
+        );
+      }
+
+      function TaskCard(props) {
+        var task = props.task;
+        var onToggle = props.onToggle;
+        var onDelete = props.onDelete;
+        var onFailChange = props.onFailChange;
+
+        var className = "task-card" + (task.done ? " done" : "") + (task.failed ? " failed" : "");
+
+        return createElement(
+          "article",
+          { className: className },
+          createElement(
+            "div",
+            { className: "task-top" },
+            createElement("button", {
+              type: "button",
+              className: "circle-btn" + (task.done ? " done" : ""),
+              onClick: function () {
+                onToggle(task.id);
+              },
+              "aria-label": task.done ? "Mark as pending" : "Mark as done"
+            }),
+            createElement(
+              "div",
+              { className: "task-main" },
+              createElement(
+                "p",
+                { className: "task-name" + (task.done ? " done" : "") },
+                task.name
+              ),
+              task.done
+                ? createElement("span", { className: "badge done" }, "done")
+                : task.failed
+                ? createElement("span", { className: "badge fail" }, "fail")
+                : null
+            ),
+            createElement(
+              "button",
+              {
+                type: "button",
+                className: "delete-btn",
+                onClick: function () {
+                  onDelete(task.id);
+                },
+                "aria-label": "Delete task"
+              },
+              "×"
+            )
+          ),
+          createElement(Timer, {
+            seconds: task.seconds,
+            done: task.done,
+            onFail: function () {
+              onFailChange(task.id, true);
+            },
+            onRecover: function () {
+              onFailChange(task.id, false);
+            }
+          })
+        );
+      }
+
+      function Stats(props) {
+        var total = props.total;
+        var done = props.done;
+        var pending = props.pending;
+
+        function card(label, value) {
+          return createElement(
+            "div",
+            { className: "stats-card", key: label },
+            createElement("p", { className: "stats-label" }, label),
+            createElement("p", { className: "stats-value" }, String(value))
+          );
+        }
+
+        return createElement(
+          "section",
+          { className: "stats-row" },
+          card("Total", total),
+          card("Done", done),
+          card("Pending", pending)
+        );
+      }
+
+      function App() {
+        var _a = useState([
+          { id: 1, name: "Prepare sprint notes", done: false, seconds: 120, failed: false },
+          { id: 2, name: "Reply to support emails", done: false, seconds: 180, failed: false }
+        ]), tasks = _a[0], setTasks = _a[1];
+
+        var _b = useState(""), taskName = _b[0], setTaskName = _b[1];
+        var _c = useState("5"), minutes = _c[0], setMinutes = _c[1];
+
+        var counts = useMemo(function () {
+          var doneCount = tasks.filter(function (task) {
+            return task.done;
+          }).length;
+
+          return {
+            total: tasks.length,
+            done: doneCount,
+            pending: tasks.length - doneCount
+          };
+        }, [tasks]);
+
+        function toggle(id) {
+          setTasks(function (prev) {
+            return prev.map(function (task) {
+              if (task.id !== id) {
+                return task;
+              }
+              return {
+                id: task.id,
+                name: task.name,
+                seconds: task.seconds,
+                done: !task.done,
+                failed: task.failed
+              };
+            });
+          });
+        }
+
+        function remove(id) {
+          setTasks(function (prev) {
+            return prev.filter(function (task) {
+              return task.id !== id;
+            });
+          });
+        }
+
+        function setFail(id, failed) {
+          setTasks(function (prev) {
+            var changed = false;
+            var next = prev.map(function (task) {
+              if (task.id !== id || task.failed === failed) {
+                return task;
+              }
+              changed = true;
+              return {
+                id: task.id,
+                name: task.name,
+                seconds: task.seconds,
+                done: task.done,
+                failed: failed
+              };
+            });
+            return changed ? next : prev;
+          });
+        }
+
+        function addTask() {
+          var name = taskName.trim();
+          if (!name) {
+            return;
+          }
+
+          var parsed = Number(minutes);
+          var secondsFromMinutes = Math.round((Number.isFinite(parsed) ? parsed : 0) * 60);
+          var seconds = Math.max(10, secondsFromMinutes);
+
+          setTasks(function (prev) {
+            return prev.concat({
+              id: Date.now() + Math.floor(Math.random() * 1000),
+              name: name,
+              done: false,
+              seconds: seconds,
+              failed: false
+            });
+          });
+
+          setTaskName("");
+        }
+
+        return createElement(
+          "main",
+          { className: "app" },
+          createElement("h1", { className: "title" }, "To-Do List"),
+          createElement(Stats, {
+            total: counts.total,
+            done: counts.done,
+            pending: counts.pending
+          }),
+          createElement(
+            "div",
+            { className: "add-row" },
+            createElement("input", {
+              className: "field",
+              type: "text",
+              placeholder: "Task name",
+              value: taskName,
+              onChange: function (event) {
+                setTaskName(event.target.value);
+              },
+              onKeyDown: function (event) {
+                if (event.key === "Enter") {
+                  addTask();
+                }
+              }
+            }),
+            createElement("input", {
+              className: "minutes-field",
+              type: "number",
+              min: "0",
+              step: "0.1",
+              value: minutes,
+              onChange: function (event) {
+                setMinutes(event.target.value);
+              },
+              "aria-label": "Duration in minutes"
+            }),
+            createElement(
+              "button",
+              {
+                type: "button",
+                className: "add-btn",
+                onClick: addTask
+              },
+              "add task"
+            )
+          ),
+          tasks.length === 0
+            ? createElement("p", { className: "empty" }, "No tasks yet. Add one to get started.")
+            : createElement(
+                "section",
+                { className: "tasks" },
+                tasks.map(function (task) {
+                  return createElement(TaskCard, {
+                    key: task.id,
+                    task: task,
+                    onToggle: toggle,
+                    onDelete: remove,
+                    onFailChange: setFail
+                  });
+                })
+              )
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(createElement(App));
+    })();
+  </script>
+</body>
+</html>
